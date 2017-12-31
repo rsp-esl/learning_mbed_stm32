@@ -1,2 +1,2 @@
 # learning_mbed_stm32
-Examples for llearning how to program STM32 MCUs with ARM Mbed
+Examples for learning how to program STM32 MCUs with ARM Mbed
