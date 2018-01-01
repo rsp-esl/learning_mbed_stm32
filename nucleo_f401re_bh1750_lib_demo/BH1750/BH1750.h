@@ -1,5 +1,10 @@
+/////////////////////////////////////////////////////////////////////////
 #ifndef __BH1750_H
 #define __BH1750_H
+
+/////////////////////////////////////////////////////////////////////////
+// Written by Rawat S. (KMUTNB, Bangkok/Thailand)
+/////////////////////////////////////////////////////////////////////////
 
 #include "mbed.h"
 
@@ -68,9 +73,10 @@ private:
     uint8_t   _mode;
     uint8_t   _buf[2];
     int       _status;
-    bool write_reg( uint8_t data );
-    bool read_reg( uint8_t &data );
-    bool read_raw( uint16_t &data );
+    
+    void write_reg( uint8_t data );
+    void read_reg( uint8_t &data );
+    void read_raw( uint16_t &data );
 };
 
 #endif // __BH1750_H
