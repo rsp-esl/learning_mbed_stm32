@@ -1,9 +1,16 @@
+//////////////////////////////////////////////////////////////////////////////
+// Author: Rawat S. (KMUTNB, Bangkok/Thailand)
+// Date: 2018-01-10
+// Code Example: Interfacing with SR04+ Ultrasonic Distance Sensor 
+// Target Board: STM32 Nucleo L053R8
+//////////////////////////////////////////////////////////////////////////////
 #include "mbed.h"
 
 #define TRIG_PIN   D4   // Output
 #define ECHO_PIN   D5   // Input
-Serial pc( SERIAL_TX, SERIAL_RX, 115200 );
-DigitalIn echo( ECHO_PIN );
+
+Serial     pc( SERIAL_TX, SERIAL_RX, 115200 );
+DigitalIn  echo( ECHO_PIN );
 DigitalOut trig( TRIG_PIN );
 Timer timer;
 
@@ -33,11 +40,9 @@ int main() {
    }
 }
 
-//////////////////////////////////////////////////////////////////////////
 // t = (2*d)/v ; t = time duration, d = distance, v = sound speed
 // => d = v*t/2 
 //      = ( 343 [m/s] * t [s] )/ 2
 //      = ( 34300 [cm/s] * t [s] )/ 2
 //      = (34300 [cm/s] * t [usec]/10^6)/ / 2
-//////////////////////////////////////////////////////////////////////////
-
+//////////////////////////////////////////////////////////////////////////////
