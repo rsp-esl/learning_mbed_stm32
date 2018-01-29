@@ -1,0 +1,21 @@
+#include "mbed.h"
+
+DigitalOut  led(LED1);
+InterruptIn btn(USER_BUTTON);
+EventQueue queue;
+
+void toggle_led( void ) {
+   for ( int i=0; i < 10; i++) {
+      led = !led;
+      Thread::wait( 50 /*msec*/);
+   }
+}
+
+int main() {
+   Thread  thread;
+
+   btn.fall( queue.event(&toggle_led) ); // set callback for button's trigger event
+   thread.start( callback(&queue, &EventQueue::dispatch_forever) ); // start a thread 
+
+   Thread::wait( osWaitForever );
+}
