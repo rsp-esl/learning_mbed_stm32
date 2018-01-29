@@ -1,0 +1,48 @@
+#include "mbed.h"
+
+#define THREAD_STACK_SIZE  1024
+#define NUM_THREADS         10
+
+Serial pc( SERIAL_TX, SERIAL_RX, 115200 );
+
+void thread_func( void *arg ) {
+    int id = (int)arg;
+    Thread::wait( (uint32_t)rand() % 901 + 100 ); // create a random integer value 100..1000
+    pc.printf( "Thread #%d done..\r\n", id );
+}
+
+int main() {
+    Thread *threads[ NUM_THREADS ];
+
+    AnalogIn ain(A0);
+    uint32_t seed = ain.read_u16();
+    srand( seed ); // initialize the seed for pseuo-random number generator.
+
+    pc.printf( "Threads Count: %d\r\n", osThreadGetCount() ); // get number of existing threads.
+
+    osThreadId threadId = osThreadGetId(); // get the Thread ID of the main thread.
+    pc.printf( "Main Thread's Stack Size: %d\r\n", osThreadGetStackSize(threadId)  );
+    pc.printf( "=================================\r\n" );
+    Thread::wait( 1000 );
+
+    while (1) {
+      pc.printf( "Creating %d threads\r\n", NUM_THREADS );
+
+      for ( int i=0; i < NUM_THREADS; i++ ) {
+         threads[i] = new Thread(osPriorityNormal, THREAD_STACK_SIZE ); // create a new Thread object.
+      }
+
+      for ( int i=0; i < NUM_THREADS; i++ ) {
+         threads[i]->start( callback( thread_func, (void *)i) ); // start each child thread.
+      }
+
+      for ( int i=0; i < NUM_THREADS; i++ ) {
+         threads[i]->join(); // wait until this child thread terminated.
+         delete threads[i];  // delete this child thread
+      }
+
+      pc.printf( "All child threads are destroyed.\r\n" );
+      pc.printf( "=================================\r\n" );
+      Thread::wait(1000);
+    }
+}

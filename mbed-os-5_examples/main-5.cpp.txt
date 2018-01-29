@@ -1,0 +1,38 @@
+#include "mbed.h"
+
+#define THREAD_STACK_SIZE  512
+#define NUM_THREADS          4
+
+const PinName pins[]   = { D5, D6, D7,  D8 }; /* Arduino-style pins */
+const int wait_times[] = {  5, 10, 50, 100 }; /* msec */
+
+typedef struct _params {
+  DigitalOut *led;
+  int wait_ms;
+} Parameters;
+
+void thread_func( void *arg ) {
+  Parameters *params = (Parameters *)arg;
+  DigitalOut *led = params->led; 
+  int wait_ms = params->wait_ms;
+  while (1) {
+     *led = ! *led; 
+     Thread::wait( wait_ms );
+  }
+}
+
+int main() {
+    Thread *threads[ NUM_THREADS ];
+    Parameters params[ NUM_THREADS ];
+
+    for ( int i=0; i < NUM_THREADS; i++ ) {
+       params[i].led     = new DigitalOut( pins[i] );
+       params[i].wait_ms = wait_times[i];
+       threads[i] = new Thread( osPriorityNormal, THREAD_STACK_SIZE );
+       threads[i]->start( callback( thread_func, (void*)&params[i]) );
+    }
+
+    while (true) {
+       Thread::wait( osWaitForever );
+    }
+}

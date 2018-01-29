@@ -1,0 +1,53 @@
+#include "mbed.h"
+
+#define USE_SEMAPHORE
+
+// active-low LED
+#define LED_ON  0
+#define LED_OFF 1
+
+#define THREAD_STACK_SIZE  512
+#define SEMAPHORE_COUNT      1  // 1=binary
+#define NUM_THREADS          6
+
+const PinName pins[] = { D4, D5, D6, D7, D8, D9 };
+
+Semaphore sem( SEMAPHORE_COUNT );
+
+void thread_func( void *arg ) {
+  DigitalOut *led = (DigitalOut *)arg;
+  while (1) {
+
+#ifdef USE_SEMAPHORE
+     sem.wait(); 
+#endif
+
+     for ( int i=0; i < 4; i++ ) {
+       *led = ! (*led);
+       Thread::wait( 50 );
+     }
+     *led = LED_OFF;
+
+#ifdef USE_SEMAPHORE
+     sem.release();
+#endif
+
+     Thread::wait( rand() % (NUM_THREADS*100) + 200 );
+  }
+}
+
+int main() {
+    Thread  *threads[ NUM_THREADS ];
+    DigitalOut *leds[ NUM_THREADS ];
+
+    AnalogIn ain(A0);
+    srand( ain.read_u16() ); // initialize the pseudo-random number generator
+
+    for ( int i=0; i < NUM_THREADS; i++ ) {
+        leds[i] = new DigitalOut( pins[i], LED_OFF ); // create DigitalOut object
+        threads[i] = new Thread( osPriorityNormal, THREAD_STACK_SIZE ); // create Thread object
+        threads[i]->start( callback( thread_func, (void *)leds[i]) );   // start Thread
+    }
+
+    Thread::wait(osWaitForever); // Main thread keeps waiting forever
+}

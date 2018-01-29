@@ -1,0 +1,25 @@
+#include "mbed.h"
+
+void thread_func( void *arg ) {
+   DigitalOut *led = (DigitalOut *)arg;
+   while (1) {
+      *led = ! (*led);    // toggle the LED
+      Thread::wait( 50 ); // wait for 50 msec
+   }
+}
+
+int main() {
+    int cnt = 0;
+
+    DigitalOut led1(LED1);
+    Serial pc( SERIAL_TX, SERIAL_RX, 115200 );
+
+    Thread led_thread;
+    led_thread.start( callback( thread_func, &led1) ); // start the LED thread
+
+    while (true) {
+       pc.printf( "Count: %4d\r\n", cnt ); // send a message to the computer
+       cnt = (cnt+1) % 10000;  // increment counter variable
+       Thread::wait( 1000 );   // wait for 1000 msec
+    }
+}

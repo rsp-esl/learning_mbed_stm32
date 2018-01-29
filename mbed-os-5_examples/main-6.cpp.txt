@@ -1,0 +1,47 @@
+#include "mbed.h"
+
+Serial pc( SERIAL_TX, SERIAL_RX, 115200 );
+
+void thread_func1( void *arg ) {
+  DigitalOut *led = (DigitalOut *)arg;
+  while (1) {
+     *led = ! (*led); // toggle LED
+     Thread::wait( 50 );
+  }
+}
+
+void thread_func2( void *arg ) {
+  DigitalIn *button = (DigitalIn *)arg;
+  uint32_t cnt = 0;
+  while (1) {
+     if ( button->read() == 0 ) { // button pressed
+        cnt++;
+        pc.printf( "Button pressed: %d\r\n", cnt );
+        while ( button->read() == 0 ) { } 
+     }
+     Thread::wait(1);
+  }
+}
+
+int main() {
+    DigitalOut led(LED1);
+    DigitalIn  button(USER_BUTTON);
+    Thread thread1, thread2;
+
+    thread1.start( callback( thread_func1, &led) );
+    thread2.start( callback( thread_func2, &button) );
+
+#if 0
+    // When the button is pressed and held down, the LED is still blinking.
+    thread1.set_priority( osPriorityHigh );
+    thread2.set_priority( osPriorityNormal );
+#else
+    // When the button is pressed and held down, the LED will not blink.
+    thread1.set_priority( osPriorityNormal );
+    thread2.set_priority( osPriorityHigh );
+#endif
+
+    while (true) {
+       Thread::wait(osWaitForever);
+    }
+}
