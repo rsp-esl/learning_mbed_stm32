@@ -1,0 +1,28 @@
+#include "mbed.h"
+
+Semaphore semaphore(1); // binary semaphore
+
+void ticker_callback( void ) { // called by Timer's ISR
+   semaphore.release();  // release the semaphore
+}
+
+void blinker_func( void *arg ) {
+   DigitalOut *led = (DigitalOut *)arg;
+   while (1) {
+      semaphore.wait();  // wait for the semaphore
+      *led = ! (*led);   // toggle LED
+   }
+}
+
+int main() {
+   DigitalOut  led(LED1);
+   Ticker      ticker;
+   Thread      blinker;
+
+   blinker.start( blinker_func, (void *)&led ); // start a thread 
+   ticker.attach( callback(&ticker_callback), 0.1f /*sec*/ ); // start ticker
+
+   while (1) {
+      Thread::wait( osWaitForever );
+   }
+}

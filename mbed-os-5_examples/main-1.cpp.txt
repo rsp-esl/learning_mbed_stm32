@@ -1,0 +1,25 @@
+#include "mbed.h"
+
+volatile bool flag = false;
+
+void ticker_callback( void ) { // called by Timer's ISR
+   flag = true;  // set flag
+}
+
+int main() {
+   DigitalOut  led(LED1);
+   Ticker      ticker;
+
+   // ticker.attach( callback(&ticker_callback), 0.05 /* second */ );
+
+   us_timestamp_t period_usec = 50000; // in microseconds
+   ticker.attach_us( callback(&ticker_callback), period_usec );
+
+   while (1) { // polling loop
+      if (flag) { 
+         flag = false;  // clear flag
+         led = !led;    // toggle the LED
+      }
+   }
+}
+

@@ -1,0 +1,20 @@
+#include "mbed.h"
+
+Semaphore semaphore(1);
+
+void ticker_callback( void ) { // called by Timer's ISR
+   semaphore.release();
+}
+
+int main() {
+   DigitalOut led(LED1);
+   Ticker     ticker;
+
+   ticker.attach( callback(&ticker_callback), 0.1f /* second */ );
+
+   while (1) {
+      semaphore.wait();
+      led = !led;
+   }
+}
+
