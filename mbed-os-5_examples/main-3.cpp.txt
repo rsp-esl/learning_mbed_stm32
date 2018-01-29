@@ -9,8 +9,8 @@ void ticker_callback( void ) { // called by Timer's ISR
 void blinker_func( void *arg ) {
    DigitalOut *led = (DigitalOut *)arg;
    while (1) {
-      semaphore.wait();  // wait for the semaphore
       *led = ! (*led);   // toggle LED
+      semaphore.wait();  // wait for the semaphore
    }
 }
 
