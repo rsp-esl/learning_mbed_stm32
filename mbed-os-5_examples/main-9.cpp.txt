@@ -1,0 +1,32 @@
+#include "mbed.h"
+
+Semaphore semaphore(1); // binary semaphore
+
+void button_func( void ) {
+   semaphore.release();  // release the semaphore
+}
+
+void blinker_func( void *arg ) {
+   DigitalOut *led = (DigitalOut *)arg;
+   while (1) {
+      semaphore.wait();  // wait for the semaphore
+      for ( int i=0; i < 10; i++ ) {
+        *led = ! (*led);   // toggle LED
+        Thread::wait( 50 /*msec*/ );
+      }
+   }
+}
+
+int main() {
+   InterruptIn btn(USER_BUTTON);
+   DigitalOut  led(LED1);
+   Thread      blinker;
+
+   btn.fall( callback(&button_func) );
+   semaphore.wait();  // wait for the semaphore   
+   blinker.start( callback(blinker_func, (void *)&led) ); // start a thread 
+
+   while (1) {
+      Thread::wait( osWaitForever );
+   }
+}
