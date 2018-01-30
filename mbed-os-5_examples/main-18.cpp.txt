@@ -1,0 +1,23 @@
+#include "mbed.h"
+
+void thread_func( void * arg ) { 
+   DigitalOut led( LED1 );
+   while (1) {
+      Thread::signal_wait( 0x1, osWaitForever ); 
+      led = 1;
+      Thread::signal_wait( 0x2, osWaitForever ); 
+      led = 0;
+   }
+}
+
+int main( ) {
+   Thread  blinker;
+   blinker.start( callback(thread_func, (void *)0) ); // start the blinker thread
+
+   while (1) {
+      blinker.signal_set( 0x1 ); 
+      Thread::wait( 25 );
+      blinker.signal_set( 0x2 ); 
+      Thread::wait( 75 );
+   }
+}
