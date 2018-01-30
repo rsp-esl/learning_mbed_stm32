@@ -1,0 +1,25 @@
+#include "mbed.h"
+
+#define SIGNAL_FLAG  (1 << 0)
+
+Thread  blinker;
+
+void thread_func( void * arg ) { 
+   DigitalOut led( LED1 );
+   while (1) {
+      blinker.signal_wait( SIGNAL_FLAG );  
+      blinker.signal_set( SIGNAL_FLAG );
+      led = !led;
+      Thread::wait(50);
+   }
+}
+
+int main( ) {
+   blinker.start( callback(thread_func, (void *)0) ); // start the blinker thread
+   blinker.set_priority( osPriorityBelowNormal );
+
+   Thread::wait( 5000 );
+   blinker.signal_set( SIGNAL_FLAG ); // kick start the blinker thread
+   Thread::wait( osWaitForever );
+
+}
