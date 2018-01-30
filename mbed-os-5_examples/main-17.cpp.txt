@@ -1,0 +1,35 @@
+#include "mbed.h"
+
+// active-low LED
+#define LED_ON  0
+#define LED_OFF 1
+
+#define SIGNAL_NUM  0x1
+#define NUM_LEDS    4
+
+const PinName pins[] = { D4, D5, D6, D7 };
+
+void thread_func( void * arg ) { 
+   int index = (int)arg;
+   DigitalOut led( pins[index], LED_OFF );
+   while (1) {
+      Thread::signal_wait( SIGNAL_NUM, osWaitForever ); // wait for notification from main thread
+      led = LED_ON;
+      Thread::wait(100);
+      led = LED_OFF;
+   }
+}
+
+int main( ) {
+   Thread  blinkers[ NUM_LEDS ];
+   for ( int i=0; i < 4; i++ ) {
+      blinkers[i].start( callback(thread_func, (void *)i) ); // start the blinker thread
+   }
+
+   int index = 0;
+   while (1) {
+      blinkers[index].signal_set( SIGNAL_NUM ); 
+      index = (index+1) % NUM_LEDS;
+      Thread::wait( 250 );
+   }
+}
