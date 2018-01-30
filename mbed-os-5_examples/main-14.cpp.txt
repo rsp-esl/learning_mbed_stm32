@@ -1,0 +1,30 @@
+#include "mbed.h"
+
+Thread  blinker;
+
+void btn_func( void ) {
+   blinker.signal_set( 0x1 ); // send a signal to ticker thread
+}
+
+void thread_func( void * arg ) { 
+   DigitalOut *led = (DigitalOut *)arg;
+   while (1) {
+      Thread::signal_wait( 0x1, osWaitForever ); // wait for notification by signal
+      for ( int i=0; i < 10; i++ ) {
+        *led = ! *led;
+        Thread::wait(50);
+      }
+   }
+}
+
+int main( ) {
+   DigitalOut  led( LED1 );
+   InterruptIn btn( USER_BUTTON );
+
+   btn.fall( callback( btn_func ) );
+   blinker.start( callback(thread_func, (void *)&led) );
+
+   Thread::wait( osWaitForever );
+}
+
+////////////////////////////////////////////////////////////

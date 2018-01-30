@@ -1,0 +1,58 @@
+#include "mbed.h"
+
+Serial pc( SERIAL_TX, SERIAL_RX, 115200 );
+
+Mutex mutex;
+float analog_values[3];
+bool done = false;
+
+void consumer_func( void * arg ) { 
+   while (1) {
+      if ( mutex.trylock( ) ) { // try to acquire lock
+         if ( done ) {
+           done = false;
+           pc.printf( "Analog read (min/avg/max): %.3f/%.3f/%.3f Volts\r\n", 
+              analog_values[0], analog_values[1], analog_values[2] );
+         }
+         mutex.unlock(); // unlock the mutex
+      }
+      Thread::yield();
+   }
+}
+
+void producer_func( void * arg ) { 
+   AnalogIn *ain = (AnalogIn *)arg;
+   while (1) {
+      uint32_t sum = 0;
+      uint16_t value, value_min=63355, value_max = 0;
+
+      for ( int i=0; i < 64; i++ ) {
+         value = ain->read_u16();
+         if ( value > value_max ) { value_max = value; }
+         if ( value < value_min ) { value_min = value; }
+         sum += value;
+         Thread::yield();
+      }
+      sum /= 64;
+
+      mutex.lock();
+      done = true;
+      analog_values[0] = (3.3f*value_min)/65535;
+      analog_values[1] = (3.3f*sum)/65535;
+      analog_values[2] = (3.3f*value_max)/65535;
+      mutex.unlock();
+
+      Thread::wait(100);
+   }
+}
+
+int main( ) {
+   AnalogIn ain( A0 );
+   Thread producer, consumer;
+   producer.start( callback(producer_func, (void *)&ain) );
+   consumer.start( callback(consumer_func, (void *)0) );
+
+   Thread::wait( osWaitForever );
+}
+
+////////////////////////////////////////////////////////////

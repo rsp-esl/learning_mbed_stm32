@@ -1,0 +1,26 @@
+#include "mbed.h"
+
+
+void thread_func( void * arg ) { 
+   osThreadId *id = (osThreadId *)arg; 
+   while (1) {
+      Thread::wait(100);
+      osSignalSet( *id, 0x1 ); // send a signal
+   }
+}
+
+int main( ) {
+   DigitalOut  led(LED1);
+   Thread      ticker;
+   osThreadId  id;
+
+   id = osThreadGetId(); // get the main thread's ID
+   ticker.start( callback(thread_func, (void *)&id) );
+
+   while(1) {
+       osSignalWait( 0x1, osWaitForever ); // wait for a signal
+       led = !led;
+   }
+}
+
+////////////////////////////////////////////////////////////

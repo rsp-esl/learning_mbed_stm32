@@ -1,0 +1,23 @@
+#include "mbed.h"
+
+void thread_func( void * arg ) { 
+   DigitalOut *led = (DigitalOut *)arg;
+   while (1) {
+      Thread::signal_wait( 0x1, osWaitForever ); // wait for notification by signal
+      *led = ! *led;
+   }
+}
+
+int main( ) {
+   DigitalOut  led(LED1);
+   Thread      ticker;
+
+   ticker.start( callback(thread_func, (void *)&led) );
+
+   while(1) {
+       ticker.signal_set( 0x01 ); // send a signal to ticker thread
+       Thread::wait(100);
+   }
+}
+
+////////////////////////////////////////////////////////////
